@@ -1,0 +1,9 @@
+bin/
+obj/
+*.exe
+*.dll
+*.pdb
+*.cache
+*.baml
+*.settings
+ZebraBarcodeScan/Properties/Settings.Designer.cs

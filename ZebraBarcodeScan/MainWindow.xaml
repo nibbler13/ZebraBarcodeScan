@@ -1,0 +1,383 @@
+﻿<Window x:Class="ZebraBarcodeScan.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ZebraBarcodeScan"
+        mc:Ignorable="d"
+        Title="Zebra Barcode Scan" 
+        Height="600" Width="800" 
+        MinHeight="500" MinWidth="700"
+        WindowStartupLocation="CenterScreen" Icon="form.ico">
+    <Grid Margin="10">
+        <TabControl>
+            <TabItem Header="Основное">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="1*"/>
+                        <RowDefinition Height="1*"/>
+                        <RowDefinition Height="6*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Text="Статус сканера:"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Bottom"
+                               Margin="0,0,0,10"
+                               FontWeight="Bold"/>
+                    
+                    <Border Grid.Row="1"
+                            Background="Orange"
+                            x:Name="BorderStatus"/>
+                    
+                    <TextBlock Grid.Row="1" 
+                               Text="Не подключен" 
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               x:Name="TextBlockStatus"
+                               FontWeight="Bold"
+                               FontSize="16"/>
+
+                    <TextBlock Grid.Row="2"
+                               VerticalAlignment="Center"
+                               HorizontalAlignment="Center"
+                               TextAlignment="Center"
+                               x:Name="TextBlockHint"/>
+
+                    <Grid Grid.Row="2" 
+                          VerticalAlignment="Center"
+                          HorizontalAlignment="Center"
+                          x:Name="GridScannedQR"
+                          Visibility="Visible">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition/>
+                            <RowDefinition Height="10"/>
+                            <RowDefinition/>
+                            <RowDefinition Height="10"/>
+                            <RowDefinition/>
+                            <RowDefinition Height="10"/>
+                            <RowDefinition/>
+                            <RowDefinition Height="10"/>
+                            <RowDefinition/>
+                            <RowDefinition Height="10"/>
+                            <RowDefinition/>
+                            <RowDefinition Height="10"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" x:Name="ColumnScanned0"/>
+                            <ColumnDefinition Width="1" MaxWidth="10"/>
+                            <ColumnDefinition Width="Auto" MinWidth="100" x:Name="ColumnScanned2"/>
+                        </Grid.ColumnDefinitions>
+
+                        <Button Grid.ColumnSpan="3"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Top"
+                                Content="X"
+                                x:Name="ButtonCloseCode"
+                                Click="ButtonCloseCode_Click"
+                                Width="20"
+                                Margin="0,0,0,10"
+                                ToolTip="Закрыть"/>
+
+                        <TextBlock Grid.Row="1" Text="Код купона:"/>
+                        <TextBox Grid.Row="1"
+                                 Grid.Column="2"
+                                 x:Name="TextBoxCode"
+                                 IsReadOnly="True"/>
+
+                        <TextBlock Grid.Row="3"
+                                   Text="Статус купона: "/>
+                        <TextBox Grid.Row="3"
+                                 Grid.Column="2"
+                                 x:Name="TextBoxStatus"
+                                 IsReadOnly="True"/>
+
+                        <TextBlock Grid.Row="5"
+                                   Text="Дата начала действия: "/>
+                        <TextBox Grid.Row="5"
+                                 Grid.Column="2"
+                                 x:Name="TextBoxDateBegin"
+                                 IsReadOnly="True"/>
+
+                        <TextBlock Grid.Row="7"
+                                 Text="Дата окончания действия: "
+                                   x:Name="TextBlockMaxWidth"/>
+                        <TextBox Grid.Row="7"
+                                 Grid.Column="2"
+                                 x:Name="TextBoxDateEnd"
+                                 IsReadOnly="True"/>
+
+                        <TextBlock Grid.Row="9"
+                                 Text="Тип акции: "/>
+                        <TextBox Grid.Row="9"
+                                 Grid.Column="2"
+                                 x:Name="TextBoxType"
+                                 IsReadOnly="True"/>
+
+                        <TextBlock Grid.Row="11"
+                                 Text="Размер скидки: "/>
+                        <TextBox Grid.Row="11"
+                                 Grid.Column="2"
+                                 x:Name="TextBoxDiscount"
+                                 IsReadOnly="True"/>
+
+                        <Button Content="Активировать купон"
+                                Grid.Row="13"
+                                Grid.ColumnSpan="3"
+                                HorizontalAlignment="Center"
+                                x:Name="ButtonActivate"
+                                Click="ButtonActivate_Click"
+                                Width="140"
+                                Margin="0,10,0,0"/>
+
+                        <Grid Grid.Row="13"
+                              Grid.ColumnSpan="3"
+                              x:Name="GridActivateCode"
+                              HorizontalAlignment="Center"
+                              Visibility="Collapsed">
+                            <Grid.RowDefinitions>
+                                <RowDefinition/>
+                                <RowDefinition/>
+                                <RowDefinition/>
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Text= "Для активации текущего кода введите номер истории пациента:"
+                                       HorizontalAlignment="Center"
+                                       TextAlignment="Center"/>
+
+                            <TextBox Grid.Row="1" 
+                                     Margin="0,10,0,10"
+                                     Width="140"
+                                     x:Name="TextBoxHistnum"
+                                     HorizontalAlignment="Center"
+                                     TextAlignment="Center"/>
+
+                            <Button Grid.Row="2"
+                                    Content="Продолжить"
+                                    x:Name="ButtonEnterHistnum"
+                                    Click="ButtonEnterHistnum_Click"
+                                    HorizontalAlignment="Center"
+                                    Width="140"/>
+                        </Grid>
+
+                        <Grid Grid.Row="13"
+                              Grid.ColumnSpan="3"
+                              x:Name="GridConfirmPatient"
+                              HorizontalAlignment="Center"
+                              Visibility="Collapsed"
+                              Width="{Binding ElementName=GridScannedQR, Path=ActualWidth}">
+                            <Grid.RowDefinitions>
+                                <RowDefinition/>
+                                <RowDefinition Height="10"/>
+                                <RowDefinition/>
+                                <RowDefinition Height="10"/>
+                                <RowDefinition/>
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="{Binding ElementName=TextBlockMaxWidth, Path=ActualWidth}"/>
+                                <ColumnDefinition Width="10" MaxWidth="10"/>
+                                <ColumnDefinition Width="{Binding ElementName=TextBoxCode, Path=ActualWidth}"/>
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Text="ФИО пациента:"/>
+                            <TextBox Grid.Column="2"
+                                     x:Name="TextBoxPatientName"
+                                     IsReadOnly="True"/>
+
+                            <TextBlock Grid.Row="2"
+                                       Text="Дата рождения:"/>
+                            <TextBox Grid.Column="2"
+                                     Grid.Row="2"
+                                     x:Name="TextBoxPatientBirthday"
+                                     IsReadOnly="True"/>
+                            
+                            <Button Grid.Row="4"
+                                    Grid.ColumnSpan="3"
+                                    Content="Подтвердить активацию" 
+                                    Width="140"
+                                    x:Name="ButtonActivateCode"
+                                    Click="ButtonActivateCode_Click"/>
+                        </Grid>
+                    </Grid>
+
+                    <Image Grid.RowSpan="4"
+                           HorizontalAlignment="Right"
+                           VerticalAlignment="Bottom" Source="Media/ButterflyClear.png"
+                           MaxWidth="100"
+                           Margin="20"/>
+
+                    <Grid Grid.Row="4" 
+                          MaxHeight="14">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <Image Source="Media/BottomLineTemplate.png" Stretch="Fill"/>
+                            <Image Grid.Column="1" Source="Media/BottomLineContinuesClear.png"/>
+                        </Grid>
+                    </Grid>
+                </Grid>
+            </TabItem>
+            <TabItem Header="Подробности работы сканера">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition MinWidth="150"/>
+                        <ColumnDefinition Width="2"/>
+                        <ColumnDefinition MinWidth="150"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <Button Grid.Row="0"
+                            Grid.ColumnSpan="3"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Width="140"
+                            Content="Discover Scanners"
+                            Click="ButtonGetScanners_Click" 
+                            x:Name="btnGetScanners"
+                            Margin="0,10,0,0"/>
+
+                    <DockPanel Grid.Row="1" 
+                               Margin="10" 
+                               Grid.ColumnSpan="3">
+                        <TextBlock Text="Connected Scanners:" 
+                                   DockPanel.Dock="Top"/>
+                        <ListView x:Name="lstvScanners" 
+                                  Margin="0,6,0,0">
+                            <ListView.View>
+                                <GridView>
+                                    <GridViewColumn Header="#" 
+                                                    DisplayMemberBinding="{Binding Number}"/>
+                                    <GridViewColumn Header="Com Interface"
+                                                    DisplayMemberBinding="{Binding ComInterface}"/>
+                                    <GridViewColumn Header="Model #" 
+                                                    DisplayMemberBinding="{Binding Model}"/>
+                                    <GridViewColumn Header="Firmware"
+                                                    DisplayMemberBinding="{Binding Firmware}"/>
+                                    <GridViewColumn Header="Built" 
+                                                    DisplayMemberBinding="{Binding Built}"/>
+                                    <GridViewColumn Header="Serial # or Port #" 
+                                                    DisplayMemberBinding="{Binding SerialOrPort}"/>
+                                    <GridViewColumn Header="GUID" 
+                                                    DisplayMemberBinding="{Binding GuID}"/>
+                                </GridView>
+                            </ListView.View>
+                        </ListView>
+                    </DockPanel>
+
+                    <WrapPanel Grid.Row="2" 
+                               Margin="10" 
+                               HorizontalAlignment="Center" 
+                               Grid.ColumnSpan="3">
+                        <TextBlock Text="Total = 0" 
+                                   x:Name="toolStripStatusLblTotal"/>
+                        <TextBlock Text="IBMHID = 0"
+                                   x:Name="toolStripStatusLblIbmhid"
+                                   Margin="20,0,20,0"/>
+                        <TextBlock Text="SNAPI = 0" 
+                                   x:Name="toolStripStatusLblSnapi"/>
+                        <TextBlock Text="IBMTT = 0" 
+                                   x:Name="toolStripStatusIBMTT" 
+                                   Margin="20,0,20,0"/>
+                        <TextBlock Text="HIDKB = 0" 
+                                   x:Name="toolStripStatusLblHidkb"/>
+                        <TextBlock Text="SSI = 0" 
+                                   x:Name="toolStripStatusLblSsi" 
+                                   Margin="20,0,20,0"/>
+                        <TextBlock Text="NXMODB = 0" 
+                                   x:Name="toolStripStatusLblNxmdb"/>
+                    </WrapPanel>
+
+                    <Grid Grid.Row="3" 
+                          x:Name="grpboxBarcodeLbl" 
+                          Margin="10">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Text="Decoded Barcode:"/>
+                        
+                        <TextBox Grid.Row="1" 
+                                 x:Name="txtBarcodeLbl" 
+                                 Margin="0,6,0,6"
+                                 IsReadOnly="True"/>
+                        
+                        <TextBlock Grid.Row="2" 
+                                   Text="Symbology:"/>
+                        
+                        <TextBox Grid.Row="3" 
+                                 x:Name="txtSyblogy" 
+                                 Margin="0,6,0,0"
+                                 IsReadOnly="True"/>
+                    </Grid>
+
+                    <DockPanel Grid.Row="3" 
+                               Margin="10"
+                               Grid.Column="2">
+                        <TextBlock Text="Barcode XML:" 
+                                   DockPanel.Dock="Top"/>
+                        
+                        <TextBox x:Name="txtBarcode" 
+                                 Margin="0,6,0,0"
+                                 VerticalScrollBarVisibility="Auto" 
+                                 HorizontalScrollBarVisibility="Auto"
+                                 IsReadOnly="True"/>
+                    </DockPanel>
+
+                    <DockPanel Grid.Row="4" 
+                               Margin="10">
+                        <TextBlock Text="Event Log" 
+                                   DockPanel.Dock="Top"/>
+                        
+                        <TextBox x:Name="txtResults" 
+                                 Margin="0,6,0,0" 
+                                 VerticalScrollBarVisibility="Auto"
+                                 HorizontalScrollBarVisibility="Auto"
+                                 IsReadOnly="True"/>
+                    </DockPanel>
+
+                    <DockPanel Grid.Row="4" 
+                               Margin="10" 
+                               Grid.Column="2">
+                        <TextBlock Text="XML Log" 
+                                   DockPanel.Dock="Top"/>
+                        
+                        <TextBox x:Name="txtOutXml" 
+                                 Margin="0,6,0,0"
+                                 VerticalScrollBarVisibility="Auto"
+                                 HorizontalScrollBarVisibility="Auto"
+                                 IsReadOnly="True"/>
+                    </DockPanel>
+
+                    <TextBlock Grid.Row="5"
+                               Grid.ColumnSpan="3" 
+                               x:Name="toolStripStatusLbl" 
+                               Background="LightBlue" 
+                               Margin="10"/>
+
+                    <GridSplitter Grid.Row="3" 
+                                  Grid.RowSpan="2" 
+                                  Grid.Column="1" 
+                                  Width="2" 
+                                  ResizeDirection="Columns" 
+                                  ResizeBehavior="PreviousAndNext"/>
+                </Grid>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</Window>
