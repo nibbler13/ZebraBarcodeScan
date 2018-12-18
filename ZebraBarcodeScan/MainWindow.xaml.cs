@@ -49,6 +49,9 @@ namespace ZebraBarcodeScan {
 		private readonly string sqlQueryCheckHistnum = Properties.Settings.Default.MisDbQueryCheckHistnum;
 		private readonly string sqlUpdateCode = Properties.Settings.Default.MisDbUpdateCode;
 
+        private string currentCodeSeries = string.Empty;
+        private string currentCodeID = string.Empty;
+
 
 		public MainWindow() {
 			InitializeComponent();
@@ -73,12 +76,12 @@ namespace ZebraBarcodeScan {
 
 			try {
 				m_pCoreScanner = new CCoreScannerClass();
-			} catch (Exception) {
-				Thread.Sleep(1000);
-				m_pCoreScanner = new CCoreScannerClass();
-			}
-
-			m_pCoreScanner.BarcodeEvent += new _ICoreScannerEvents_BarcodeEventEventHandler(OnBarcodeEvent);
+                m_pCoreScanner.BarcodeEvent += new _ICoreScannerEvents_BarcodeEventEventHandler(OnBarcodeEvent);
+            } catch (Exception e) {
+                MessageBox.Show("Не установлены драйвера Zebra_CoreScanner_Driver: " + 
+                    e.Message + Environment.NewLine + e.StackTrace, "CoreScannerError", 
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
 
 			Loaded += MainWindow_Loaded;
 		}
@@ -98,6 +101,9 @@ namespace ZebraBarcodeScan {
 			}
 
 			UpdateStatusTextBlocks(result);
+
+            //temp
+            //UpdateCodeInfo("999-3-1E99FD9E-43E3-415C-8C43-56A72A74B5EF");
 		}
 
 		private void DispatcherTimer_Tick(object sender, EventArgs e) {
@@ -117,8 +123,16 @@ namespace ZebraBarcodeScan {
 
 		private void UpdateCodeInfo(string code) {
 			bool isCodeFormatError = false;
+            bool isDbError = false;
+            bool isCodeNotAvailable = false;
 
-			if (!code.Contains("-"))
+            string uuid = string.Empty;
+            DateTime? date_start = null;
+            DateTime? date_end = null;
+            string comment = string.Empty;
+            string use_status = string.Empty;
+
+            if (!code.Contains("-"))
 				isCodeFormatError = true;
 			else {
 				string[] codeArray = code.Split('-');
@@ -126,32 +140,101 @@ namespace ZebraBarcodeScan {
 				if (codeArray.Length < 3)
 					isCodeFormatError = true;
 				else {
-					DataTable dataTable = firebirdClient.GetDataTable(sqlQueryCheckCode, new Dictionary<string, string> {
-						{"@series",  codeArray[0]},
-						{"@id", codeArray[1] }
+                    currentCodeSeries = codeArray[0];
+                    currentCodeID = codeArray[1];
+
+                    DataTable dataTable = firebirdClient.GetDataTable(sqlQueryCheckCode, new Dictionary<string, string> {
+						{"@series", currentCodeSeries },
+						{"@id", currentCodeID }
 					});
 
-					if (dataTable.Rows.Count != 1) {
+					if (dataTable.Rows.Count == 0) {
+                        isDbError = true;
+                        MessageBox.Show(this, "По отсканированному коду не найдено данных. " +
+                            "Возможно отсканирован некорректный код.", "", 
+                            MessageBoxButton.OK, MessageBoxImage.Warning);
+					} else if (dataTable.Rows.Count > 1) {
+                        isDbError = true;
+                        MessageBox.Show(this, "По отсканированному коду найдено несколько записей. " +
+                            "Необходимо обратиться в службу технической поддержки.", "",
+                            MessageBoxButton.OK, MessageBoxImage.Warning);
+                    } else {
+                        try {
+                            DataRow dataRow = dataTable.Rows[0];
+                            uuid = dataRow["UUID"].ToString();
 
-					}
+                            string scannedUUID = code.Replace(codeArray[0] + "-" + codeArray[1] + "-", "");
+                            if (!scannedUUID.Equals(uuid)) {
+                                use_status = "Код недействителен";
+                                MessageBox.Show(this, "Секретный ключ отсканированного кода " +
+                                    "не совпадает с данными в базе. Код недействителен.",
+                                    "", MessageBoxButton.OK, MessageBoxImage.Error);
+                                isCodeNotAvailable = true;
+                            } else {
+
+                                string date_start_string = dataRow["DATE_START"].ToString();
+                                string date_end_string = dataRow["DATE_END"].ToString();
+
+                                if (!string.IsNullOrEmpty(date_start_string))
+                                    date_start = DateTime.Parse(date_start_string);
+
+                                if (!string.IsNullOrEmpty(date_end_string))
+                                    date_end = DateTime.Parse(date_end_string);
+
+                                comment = dataRow["COMMENT"].ToString();
+                                use_status = dataRow["USE_STATUS"].ToString();
+
+                                if (use_status.Equals("1")) {
+                                    isCodeNotAvailable = true;
+
+                                    string use_date = dataRow["USE_DATE"].ToString();
+                                    string use_system_name = dataRow["USE_SYSTEM_NAME"].ToString();
+
+                                    use_status = "Код был активирован ранее";
+                                    MessageBox.Show(this, "Отсканированный код был активирован ранее:" +
+                                        Environment.NewLine + "Дата активации: " + use_date.Replace(" 0:00:00", "") +
+                                        Environment.NewLine + "Имя системы: " + use_system_name, "",
+                                        MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                                } else {
+                                    if (date_start.HasValue && date_start.Value > DateTime.Now) {
+                                        use_status = "Срок действия кода еще не начался";
+                                        MessageBox.Show(this, "Срок действия отсканированного кода еще не начался",
+                                            "", MessageBoxButton.OK, MessageBoxImage.Warning);
+                                        isCodeNotAvailable = true;
+                                    } else if (date_end.HasValue && date_end.Value.AddDays(1) < DateTime.Now) {
+                                        use_status = "Срок действия кода истек";
+                                        MessageBox.Show(this, "Срок действия отсканированного кода истек",
+                                            "", MessageBoxButton.OK, MessageBoxImage.Warning);
+                                        isCodeNotAvailable = true;
+                                    }
+                                }
+
+                                if (!isCodeNotAvailable)
+                                    use_status = "Доступен для активации";
+                            }
+                        } catch (Exception e) {
+                            MessageBox.Show(this, e.Message + Environment.NewLine + e.StackTrace,
+                                "Ошибка обработки данных", MessageBoxButton.OK, MessageBoxImage.Error);
+                            isDbError = true;
+                        }
+                    }
 				}
 			}
 
 			if (isCodeFormatError) {
 				MessageBox.Show(this, "Формат отсканированного кода не совпадает с требуемым", "", MessageBoxButton.OK, MessageBoxImage.Error);
-				return;
 			}
 
 			TextBlockHint.Visibility = Visibility.Hidden;
 
 			TextBoxCode.Text = code;
-			TextBoxStatus.Text = "Активен";
-			TextBoxDateBegin.Text = "01.01.2019";
-			TextBoxDateEnd.Text = "30.06.2019";
-			TextBoxType.Text = "Скидка на один прием раздела Стоматология";
-			TextBoxDiscount.Text = "15%";
+			TextBoxStatus.Text = use_status;
+			TextBoxDateBegin.Text = date_start.HasValue ? date_start.Value.ToLongDateString() : string.Empty;
+			TextBoxDateEnd.Text = date_end.HasValue ? date_end.Value.ToLongDateString() : string.Empty;
+			TextBoxComment.Text = comment;
 			TextBoxHistnum.Text = string.Empty;
 
+            ButtonActivate.IsEnabled = !isCodeFormatError && !isDbError && !isCodeNotAvailable;
 			ButtonActivate.Visibility = Visibility.Visible;
 			GridActivateCode.Visibility = Visibility.Collapsed;
 			GridConfirmPatient.Visibility = Visibility.Collapsed;
@@ -164,10 +247,41 @@ namespace ZebraBarcodeScan {
 		}
 
 		private void ButtonEnterHistnum_Click(object sender, RoutedEventArgs e) {
+            string histnum = TextBoxHistnum.Text;
+
+            DataTable dataTable = firebirdClient.GetDataTable(sqlQueryCheckHistnum, new Dictionary<string, string> {
+                {"@histnum", histnum }
+            });
+
+            if (dataTable.Rows.Count == 0) {
+                MessageBox.Show(this, "Не найдено пациентов по введеному номеру истории болезни. Возможно номер введен неверно",
+                    "", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (dataTable.Rows.Count > 1) {
+                MessageBox.Show(this, "По введенному номеру истории болезни найден более чем один пациент. Обратитесь в службу технической поддержки",
+                    "", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            string patientName = string.Empty;
+            string patientBirthday = string.Empty;
+            DataRow dataRow = dataTable.Rows[0];
+
+            try {
+                patientName = dataRow["FULLNAME"].ToString();
+                patientBirthday = dataRow["BDATE"].ToString().Replace(" 0:00:00", "");
+            } catch (Exception exc) {
+                MessageBox.Show(this, exc.Message + Environment.NewLine + exc.StackTrace,
+                    "Ошибка обработки данных", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
 			GridActivateCode.Visibility = Visibility.Collapsed;
 
-			TextBoxPatientName.Text = "Стародымов Сергей Анатольевич";
-			TextBoxPatientBirthday.Text = "01 января 1990 г.";
+			TextBoxPatientName.Text = patientName;
+			TextBoxPatientBirthday.Text = patientBirthday;
 
 			GridConfirmPatient.Visibility = Visibility.Visible;
 		}
@@ -178,8 +292,21 @@ namespace ZebraBarcodeScan {
 		}
 
 		private void ButtonActivateCode_Click(object sender, RoutedEventArgs e) {
-			MessageBox.Show(this, "Активация кода прошла успешно!", string.Empty, MessageBoxButton.OK, MessageBoxImage.Information);
-			ButtonCloseCode_Click(null, null);
+            bool isUpdateOk = firebirdClient.ExecuteUpdateQuery(sqlUpdateCode, new Dictionary<string, object> {
+                { "@date", DateTime.Now.ToString() },
+                { "@histnum", TextBoxHistnum.Text },
+                { "@system", Environment.MachineName },
+                { "@id", currentCodeID },
+                { "@series", currentCodeSeries }
+            });
+
+            if (isUpdateOk) {
+                MessageBox.Show(this, "Активация кода прошла успешно!", string.Empty, MessageBoxButton.OK, MessageBoxImage.Information);
+                ButtonCloseCode_Click(null, null);
+            } else {
+                MessageBox.Show(this, "Не удалось активировать код. Обратитесь в службу технической поддержки", 
+                    string.Empty, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
 		}
 
 		private void ButtonCancelHistnum_Click(object sender, RoutedEventArgs e) {

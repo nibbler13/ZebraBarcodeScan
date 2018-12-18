@@ -8,11 +8,11 @@ using System.Windows;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("ZebraBarcodeScan")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("Утилита для погашения купонов на скидку")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("ООО Клиника ЛМС")]
 [assembly: AssemblyProduct("ZebraBarcodeScan")]
-[assembly: AssemblyCopyright("Copyright ©  2018")]
+[assembly: AssemblyCopyright("nn-admin ©  2018")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

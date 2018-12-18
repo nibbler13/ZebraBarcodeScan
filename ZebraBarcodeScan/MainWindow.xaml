@@ -61,8 +61,6 @@
                             <RowDefinition Height="10"/>
                             <RowDefinition/>
                             <RowDefinition Height="10"/>
-                            <RowDefinition/>
-                            <RowDefinition Height="10"/>
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
@@ -118,17 +116,10 @@
                                  Text="Тип акции: "/>
                         <TextBox Grid.Row="9"
                                  Grid.Column="2"
-                                 x:Name="TextBoxType"
+                                 x:Name="TextBoxComment"
                                  IsReadOnly="True"/>
 
-                        <TextBlock Grid.Row="11"
-                                 Text="Размер скидки: "/>
-                        <TextBox Grid.Row="11"
-                                 Grid.Column="2"
-                                 x:Name="TextBoxDiscount"
-                                 IsReadOnly="True"/>
-
-                        <Button Grid.Row="13"
+                        <Button Grid.Row="11"
                                 Grid.ColumnSpan="3"
                                 HorizontalAlignment="Center"
                                 x:Name="ButtonActivate"
@@ -143,7 +134,7 @@
                             </StackPanel>
                         </Button>
 
-                        <Grid Grid.Row="13"
+                        <Grid Grid.Row="11"
                               Grid.ColumnSpan="3"
                               x:Name="GridActivateCode"
                               HorizontalAlignment="Center"
@@ -177,7 +168,7 @@
                             </Button>
                         </Grid>
 
-                        <Grid Grid.Row="13"
+                        <Grid Grid.Row="11"
                               Grid.ColumnSpan="3"
                               x:Name="GridConfirmPatient"
                               HorizontalAlignment="Center"

@@ -7,3 +7,4 @@ obj/
 *.baml
 *.settings
 ZebraBarcodeScan/Properties/Settings.Designer.cs
+*.zip
