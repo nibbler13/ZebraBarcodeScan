@@ -38,6 +38,9 @@
     <ApplicationIcon>form.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="FirebirdSql.Data.FirebirdClient, Version=6.4.0.0, Culture=neutral, PublicKeyToken=3750abcc3150b00c, processorArchitecture=MSIL">
+      <HintPath>..\packages\FirebirdSql.Data.FirebirdClient.6.4.0\lib\net452\FirebirdSql.Data.FirebirdClient.dll</HintPath>
+    </Reference>
     <Reference Include="Interop.CoreScanner">
       <HintPath>..\..\..\..\Desktop\SampleApp_CSharp\obj\Debug\Interop.CoreScanner.dll</HintPath>
       <EmbedInteropTypes>False</EmbedInteropTypes>
@@ -62,6 +65,8 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="FirebirdClient.cs" />
+    <Compile Include="ScannerItem.cs" />
     <Compile Include="ZebraConstants.cs" />
     <Compile Include="Scanner.cs" />
     <Compile Include="XmlReader.cs" />
@@ -96,6 +101,7 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+    <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -111,6 +117,13 @@
     <Resource Include="Media\BottomLineContinuesClear.png" />
     <Resource Include="Media\BottomLineTemplate.png" />
     <Resource Include="Media\ButterflyClear.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Media\Close_16x.png" />
+    <Resource Include="Media\ConfirmButton_16x.png" />
+    <Resource Include="Media\EnableCode_16x.png" />
+    <Resource Include="Media\Next_16x.png" />
+    <Resource Include="Media\Undo_16x.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

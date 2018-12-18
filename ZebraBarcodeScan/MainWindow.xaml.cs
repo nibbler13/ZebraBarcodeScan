@@ -1,6 +1,7 @@
 ﻿using CoreScanner;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.IO;
 using System.Text;
 using System.Threading;
@@ -29,17 +30,24 @@ namespace ZebraBarcodeScan {
 		//total scanners in types of SCANNER_TYPES_SNAPI, SCANNER_TYPES_SSI, SCANNER_TYPES_IBMHID, SCANNER_TYPES_NIXMODB, SCANNER_TYPES_HIDKB
 		int[] m_nArTotalScannersInType;
 
-		readonly List<string> claimlist = new List<string>();
+		private readonly string hintConnectionUnseccessfull =
+			"Для продолжения работы убедитесь, что сканер физически подключен и корректно настроен." + Environment.NewLine +
+			"В случае невозможности самостоятельного исправления проблем с подключением," + Environment.NewLine +
+			"необходимо обратиться в службу технической поддержки пользователей.";
 
-		public class ScannerItem {
-			public string Number { get; set; }
-			public string ComInterface { get; set; }
-			public string Model { get; set; }
-			public string Firmware { get; set; }
-			public string Built { get; set; }
-			public string SerialOrPort { get; set; }
-			public string GuID { get; set; }
-		}
+		private readonly string hintConnectionSuccessfull = "" +
+			"Для продолжения отсканируйте QR-код на купоне...";
+
+		readonly List<string> claimlist = new List<string>();
+		private readonly FirebirdClient firebirdClient = new FirebirdClient(
+				Properties.Settings.Default.MisDbAddress,
+				Properties.Settings.Default.MisDbName,
+				Properties.Settings.Default.MisDbUser,
+				Properties.Settings.Default.MisDbPassword);
+
+		private readonly string sqlQueryCheckCode = Properties.Settings.Default.MisDbQueryCheckCode;
+		private readonly string sqlQueryCheckHistnum = Properties.Settings.Default.MisDbQueryCheckHistnum;
+		private readonly string sqlUpdateCode = Properties.Settings.Default.MisDbUpdateCode;
 
 
 		public MainWindow() {
@@ -75,6 +83,8 @@ namespace ZebraBarcodeScan {
 			Loaded += MainWindow_Loaded;
 		}
 
+
+
 		private void MainWindow_Loaded(object sender, RoutedEventArgs e) {
 			bool result = PerformGetScanner();
 
@@ -97,14 +107,6 @@ namespace ZebraBarcodeScan {
 			}
 		}
 
-		private readonly string hintConnectionUnseccessfull = 
-			"Для продолжения работы убедитесь, что сканер физически подключен и корректно настроен." + Environment.NewLine +
-			"В случае невозможности самостоятельного исправления проблем с подключением," + Environment.NewLine +
-			"необходимо обратиться в службу технической поддержки пользователей.";
-
-		private readonly string hintConnectionSuccessfull = "" +
-			"Для продолжения отсканируйте QR-код на купоне...";
-
 		private void UpdateStatusTextBlocks(bool isSuccess) {
 			BorderStatus.Background = isSuccess ? Brushes.LightGreen : Brushes.Orange;
 			TextBlockStatus.Text = isSuccess ? "Подключен" : "Не подключен";
@@ -114,6 +116,32 @@ namespace ZebraBarcodeScan {
 		}
 
 		private void UpdateCodeInfo(string code) {
+			bool isCodeFormatError = false;
+
+			if (!code.Contains("-"))
+				isCodeFormatError = true;
+			else {
+				string[] codeArray = code.Split('-');
+
+				if (codeArray.Length < 3)
+					isCodeFormatError = true;
+				else {
+					DataTable dataTable = firebirdClient.GetDataTable(sqlQueryCheckCode, new Dictionary<string, string> {
+						{"@series",  codeArray[0]},
+						{"@id", codeArray[1] }
+					});
+
+					if (dataTable.Rows.Count != 1) {
+
+					}
+				}
+			}
+
+			if (isCodeFormatError) {
+				MessageBox.Show(this, "Формат отсканированного кода не совпадает с требуемым", "", MessageBoxButton.OK, MessageBoxImage.Error);
+				return;
+			}
+
 			TextBlockHint.Visibility = Visibility.Hidden;
 
 			TextBoxCode.Text = code;
@@ -134,6 +162,7 @@ namespace ZebraBarcodeScan {
 			ButtonActivate.Visibility = Visibility.Collapsed;
 			GridActivateCode.Visibility = Visibility.Visible;
 		}
+
 		private void ButtonEnterHistnum_Click(object sender, RoutedEventArgs e) {
 			GridActivateCode.Visibility = Visibility.Collapsed;
 
@@ -142,6 +171,7 @@ namespace ZebraBarcodeScan {
 
 			GridConfirmPatient.Visibility = Visibility.Visible;
 		}
+
 		private void ButtonCloseCode_Click(object sender, RoutedEventArgs e) {
 			GridScannedQR.Visibility = Visibility.Hidden;
 			TextBlockHint.Visibility = Visibility.Visible;
@@ -150,6 +180,11 @@ namespace ZebraBarcodeScan {
 		private void ButtonActivateCode_Click(object sender, RoutedEventArgs e) {
 			MessageBox.Show(this, "Активация кода прошла успешно!", string.Empty, MessageBoxButton.OK, MessageBoxImage.Information);
 			ButtonCloseCode_Click(null, null);
+		}
+
+		private void ButtonCancelHistnum_Click(object sender, RoutedEventArgs e) {
+			GridConfirmPatient.Visibility = Visibility.Collapsed;
+			GridActivateCode.Visibility = Visibility.Visible;
 		}
 
 		void OnBarcodeEvent(short eventType, ref string scanData) {
