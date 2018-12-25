@@ -91,7 +91,10 @@ namespace ZebraBarcodeScan {
 		private void MainWindow_Loaded(object sender, RoutedEventArgs e) {
 			bool result = PerformGetScanner();
 
-			if (!result) {
+            //temp
+            //result = true;
+
+            if (!result) {
 				DispatcherTimer dispatcherTimer = new DispatcherTimer {
 					Interval = TimeSpan.FromSeconds(5)
 				};
@@ -100,13 +103,13 @@ namespace ZebraBarcodeScan {
 				dispatcherTimer.Start();
 			}
 
-			UpdateStatusTextBlocks(result);
+            UpdateStatusTextBlocks(result);
 
             //temp
-            //UpdateCodeInfo("999-3-1E99FD9E-43E3-415C-8C43-56A72A74B5EF");
-		}
+            //UpdateCodeInfo("999-4-26A4C737-9FCE-419D-9038-8BDD2F0E8E1B");
+        }
 
-		private void DispatcherTimer_Tick(object sender, EventArgs e) {
+        private void DispatcherTimer_Tick(object sender, EventArgs e) {
 			if (PerformGetScanner()) {
 				UpdateStatusTextBlocks(true);
 				(sender as DispatcherTimer).Stop();
