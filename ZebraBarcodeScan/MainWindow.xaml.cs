@@ -91,10 +91,10 @@ namespace ZebraBarcodeScan {
 		private void MainWindow_Loaded(object sender, RoutedEventArgs e) {
 			bool result = PerformGetScanner();
 
-            //temp
-            //result = true;
+			//temp
+			//result = true;
 
-            if (!result) {
+			if (!result) {
 				DispatcherTimer dispatcherTimer = new DispatcherTimer {
 					Interval = TimeSpan.FromSeconds(5)
 				};
@@ -105,9 +105,9 @@ namespace ZebraBarcodeScan {
 
             UpdateStatusTextBlocks(result);
 
-            //temp
-            //UpdateCodeInfo("999-4-26A4C737-9FCE-419D-9038-8BDD2F0E8E1B");
-        }
+			//temp
+			//UpdateCodeInfo("3-1-F8EAEB46-775E-4687-8776-6A849972717D");
+		}
 
         private void DispatcherTimer_Tick(object sender, EventArgs e) {
 			if (PerformGetScanner()) {
@@ -173,8 +173,8 @@ namespace ZebraBarcodeScan {
                                     "не совпадает с данными в базе. Код недействителен.",
                                     "", MessageBoxButton.OK, MessageBoxImage.Error);
                                 isCodeNotAvailable = true;
-                            } else {
 
+                            } else {
                                 string date_start_string = dataRow["DATE_START"].ToString();
                                 string date_end_string = dataRow["DATE_END"].ToString();
 
@@ -187,30 +187,36 @@ namespace ZebraBarcodeScan {
                                 comment = dataRow["COMMENT"].ToString();
                                 use_status = dataRow["USE_STATUS"].ToString();
 
-                                if (use_status.Equals("1")) {
-                                    isCodeNotAvailable = true;
+								if (IsCurrentCodeUnlimited()) {
+									date_start = null;
+									date_end = null;
+								} else {
+									if (use_status.Equals("1")) {
+										isCodeNotAvailable = true;
 
-                                    string use_date = dataRow["USE_DATE"].ToString();
-                                    string use_system_name = dataRow["USE_SYSTEM_NAME"].ToString();
+										string use_date = dataRow["USE_DATE"].ToString();
+										string use_system_name = dataRow["USE_SYSTEM_NAME"].ToString();
 
-                                    use_status = "Код был активирован ранее";
-                                    MessageBox.Show(this, "Отсканированный код был активирован ранее:" +
-                                        Environment.NewLine + "Дата активации: " + use_date.Replace(" 0:00:00", "") +
-                                        Environment.NewLine + "Имя системы: " + use_system_name, "",
-                                        MessageBoxButton.OK, MessageBoxImage.Exclamation);
-                                } else {
-                                    if (date_start.HasValue && date_start.Value > DateTime.Now) {
-                                        use_status = "Срок действия кода еще не начался";
-                                        MessageBox.Show(this, "Срок действия отсканированного кода еще не начался",
-                                            "", MessageBoxButton.OK, MessageBoxImage.Warning);
-                                        isCodeNotAvailable = true;
-                                    } else if (date_end.HasValue && date_end.Value.AddDays(1) < DateTime.Now) {
-                                        use_status = "Срок действия кода истек";
-                                        MessageBox.Show(this, "Срок действия отсканированного кода истек",
-                                            "", MessageBoxButton.OK, MessageBoxImage.Warning);
-                                        isCodeNotAvailable = true;
-                                    }
-                                }
+										use_status = "Код был активирован ранее";
+										MessageBox.Show(this, "Отсканированный код был активирован ранее:" +
+											Environment.NewLine + "Дата активации: " + use_date.Replace(" 0:00:00", "") +
+											Environment.NewLine + "Имя системы: " + use_system_name, "",
+											MessageBoxButton.OK, MessageBoxImage.Exclamation);
+									} else {
+										if (date_start.HasValue && date_start.Value > DateTime.Now) {
+											use_status = "Срок действия кода еще не начался";
+											MessageBox.Show(this, "Срок действия отсканированного кода еще не начался",
+												"", MessageBoxButton.OK, MessageBoxImage.Warning);
+											isCodeNotAvailable = true;
+										} else if (date_end.HasValue && date_end.Value.AddDays(1) < DateTime.Now) {
+											use_status = "Срок действия кода истек";
+											MessageBox.Show(this, "Срок действия отсканированного кода истек",
+												"", MessageBoxButton.OK, MessageBoxImage.Warning);
+											isCodeNotAvailable = true;
+										}
+									}
+								}
+
 
                                 if (!isCodeNotAvailable)
                                     use_status = "Доступен для активации";
@@ -224,9 +230,8 @@ namespace ZebraBarcodeScan {
 				}
 			}
 
-			if (isCodeFormatError) {
+			if (isCodeFormatError) 
 				MessageBox.Show(this, "Формат отсканированного кода не совпадает с требуемым", "", MessageBoxButton.OK, MessageBoxImage.Error);
-			}
 
 			TextBlockHint.Visibility = Visibility.Hidden;
 
@@ -245,8 +250,18 @@ namespace ZebraBarcodeScan {
 		}
 
 		private void ButtonActivate_Click(object sender, RoutedEventArgs e) {
+			if (IsCurrentCodeUnlimited()) {
+				MessageBox.Show(this, "Активация кода прошла успешно!", string.Empty, MessageBoxButton.OK, MessageBoxImage.Information);
+				ButtonCloseCode_Click(null, null);
+				return;
+			}
+
 			ButtonActivate.Visibility = Visibility.Collapsed;
 			GridActivateCode.Visibility = Visibility.Visible;
+		}
+
+		private bool IsCurrentCodeUnlimited() {
+			return (currentCodeSeries.Equals("3") || currentCodeSeries.Equals("4")) && currentCodeID.Equals("1");
 		}
 
 		private void ButtonEnterHistnum_Click(object sender, RoutedEventArgs e) {

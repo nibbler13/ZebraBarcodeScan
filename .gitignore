@@ -8,3 +8,4 @@ obj/
 *.settings
 ZebraBarcodeScan/Properties/Settings.Designer.cs
 *.zip
+.vs/
